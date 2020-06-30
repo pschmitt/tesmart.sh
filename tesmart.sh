@@ -167,7 +167,7 @@ then
       unmute_buzzer
       ;;
     sound|beep)
-      _set_buzzer "$2"
+      set_buzzer "$2"
       ;;
     led|led-timeout|lights|light|l)
       set_led_timeout "$2"
