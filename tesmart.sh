@@ -27,7 +27,7 @@ send_cmd() {
   echo -ne "$@" | nc "${extra_args[@]}" -n "$TESMART_HOST" "$TESMART_PORT"
 }
 
-_set_buzzer() {
+set_buzzer() {
   local cmd
 
   case "$1" in
@@ -42,11 +42,11 @@ _set_buzzer() {
 }
 
 mute_buzzer() {
-  _set_buzzer off
+  set_buzzer off
 }
 
 unmute_buzzer() {
-  _set_buzzer on
+  set_buzzer on
 }
 
 switch_input() {
@@ -54,7 +54,7 @@ switch_input() {
   send_cmd "\xaa\xbb\x03\x01\x0${1}\xee"
 }
 
-_set_input_detection() {
+set_input_detection() {
   local cmd
 
   case "$1" in
@@ -69,7 +69,7 @@ _set_input_detection() {
   send_cmd "$cmd"
 }
 
-_set_led_timeout() {
+set_led_timeout() {
   local cmd
 
   case "$1" in
@@ -170,7 +170,7 @@ then
       _set_buzzer "$2"
       ;;
     led|led-timeout|lights|light|l)
-      _set_led_timeout "$2"
+      set_led_timeout "$2"
       ;;
     switch-input|switch|sw|s)
       switch_input "$2"
