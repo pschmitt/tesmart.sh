@@ -7,7 +7,13 @@ TESMART_PORT=${TESMART_PORT:-5000}
 
 usage() {
   echo "Usage: $(basename "$0") ACTION [ARGS]"
-  echo -e "\n   ACTIONS: get-input|switch|mute|unmute"
+  echo -e "\nAvailable ACTIONS:"
+  echo "  g, get-input       Get current input ID"
+  echo "  s, switch-input    Set the current input ID"
+  echo "  m, mute            Mute buzzer"
+  echo "  u, unmute          Unmute buzzer"
+  echo "  l, led-timeout     Set LED timeout"
+  echo "  e, exec            Send arbitrary HEX command to the host"
 }
 
 send_cmd() {
@@ -59,6 +65,7 @@ _set_input_detection() {
       cmd="\xaa\xbb\x03\x81\x00\xee"
       ;;
   esac
+
   send_cmd "$cmd"
 }
 
@@ -76,10 +83,11 @@ _set_led_timeout() {
       cmd="\xaa\xbb\x03\x03\x1e\xee"
       ;;
     *)
-      echo "Invalid time. It's either 10s, 30s or never" >&2
+      echo "❌ Invalid time. It's either 10s, 30s or never" >&2
       return 2
       ;;
   esac
+
   send_cmd "$cmd"
 }
 
@@ -152,10 +160,10 @@ then
       usage
       exit 0
       ;;
-    mute)
+    mute|m)
       mute_buzzer
       ;;
-    unmute)
+    unmute|u)
       unmute_buzzer
       ;;
     sound|beep)
@@ -164,14 +172,16 @@ then
     led|led-timeout|lights|light|l)
       _set_led_timeout "$2"
       ;;
-    switch|sw|s)
+    switch-input|switch|sw|s)
       switch_input "$2"
+
       input="$(get_current_input 2>/dev/null)"
       while [[ -z "$input" ]]
       do
         input="$(get_current_input 2>/dev/null)"
         sleep 0.25
       done
+
       if [[ "$2" == "$input" ]]
       then
         echo "✔️ Switched to input $input"
@@ -182,6 +192,9 @@ then
       ;;
     get|get-input|g)
       echo "📺 Current input: $(get_current_input)"
+      ;;
+    command|cmd|exec|eval|e|c)
+      send_cmd "$@"
       ;;
     *)
       echo "❌ Unknown command: $1" >&2
