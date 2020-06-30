@@ -31,6 +31,10 @@ This has only been tested with the [8-PORT HDMI 1.4 4K 30HZ](https://buytesmart.
 ./tesmart.sh led-timeout 30
 ./tesmart.sh led-timeout never
 
+# Enable/disable input detection
+./tesmart.sh input-detection on
+./tesmart.sh input-detection off
+
 # Custom HOST/PORT
 TESMART_HOST=10.78.81.10 TESMART_PORT=5001 ./tesmart.sh get-input
 # Alternative

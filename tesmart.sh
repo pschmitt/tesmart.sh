@@ -38,6 +38,7 @@ set_buzzer() {
       cmd="\xaa\xbb\x03\x02\x01\xee"
       ;;
   esac
+
   send_cmd "$cmd"
 }
 
@@ -59,10 +60,10 @@ set_input_detection() {
 
   case "$1" in
     off|disable)
-      cmd="\xaa\xbb\x03\x81\x01\xee"
+      cmd="\xaa\xbb\x03\x81\x00\xee"
       ;;
     *)  # on|enable
-      cmd="\xaa\xbb\x03\x81\x00\xee"
+      cmd="\xaa\xbb\x03\x81\x01\xee"
       ;;
   esac
 
@@ -166,11 +167,14 @@ then
     unmute|u)
       unmute_buzzer
       ;;
-    sound|beep)
+    sound|beep|b)
       set_buzzer "$2"
       ;;
     led|led-timeout|lights|light|l)
       set_led_timeout "$2"
+      ;;
+    input-detection|detection|d)
+      set_input_detection "$2"
       ;;
     switch-input|switch|sw|s)
       switch_input "$2"
