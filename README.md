@@ -29,7 +29,11 @@
 
 # Custom HOST/PORT
 TESMART_HOST=10.78.81.10 TESMART_PORT=5001 ./tesmart.sh get-input
+# Alternative
+./tesmart.sh -H 10.78.81.10 -p 5001 get-input
 
 # DEBUG
 DEBUG=1 ./tesmart.sh get-input
+# Alternative
+./tesmart.sh -d get-input
 ```

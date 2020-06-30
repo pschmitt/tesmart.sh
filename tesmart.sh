@@ -126,6 +126,27 @@ get_current_input() {
 
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]
 then
+  while true
+  do
+    case "$1" in
+      --host|-H)
+        TESMART_HOST="$2"
+        shift 2
+        ;;
+      --port|-p)
+        TESMART_PORT="$2"
+        shift 2
+        ;;
+      --debug|-d|-D)
+        DEBUG=1
+        shift
+        ;;
+      *)
+        break
+        ;;
+    esac
+  done
+
   case "$1" in
     help|--help|-h|h)
       usage
