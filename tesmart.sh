@@ -2,8 +2,8 @@
 
 # https://buytesmart.com/pages/support-manuals
 
-TESMART_HOST=192.168.1.10
-TESMART_PORT=5000
+TESMART_HOST=${TESMART_HOST:-192.168.1.10}
+TESMART_PORT=${TESMART_PORT:-5000}
 
 usage() {
   echo "Usage: $(basename "$0") ACTION [ARGS]"
@@ -11,7 +11,14 @@ usage() {
 }
 
 send_cmd() {
-  echo -ne "$@" | nc -n "$TESMART_HOST" "$TESMART_PORT"
+  local -a extra_args
+
+  if [[ -n "$DEBUG" ]]
+  then
+    extra_args+=(-vv)
+  fi
+
+  echo -ne "$@" | nc "${extra_args[@]}" -n "$TESMART_HOST" "$TESMART_PORT"
 }
 
 _set_buzzer() {
@@ -59,7 +66,7 @@ _set_led_timeout() {
   local cmd
 
   case "$1" in
-    off|disable)
+    off|disable|never)
       cmd="\xaa\xbb\x03\x03\x00\xee"
       ;;
     10|10s|10-seconds)
@@ -101,7 +108,7 @@ get_current_input() {
 
   if [[ -z "$dec" ]]
   then
-    echo "Unable to determine input ID" >&2
+    echo "❌ Unable to determine input ID" >&2
     return 4
   fi
 
@@ -113,6 +120,7 @@ get_current_input() {
       input_id="$(( dec + 1 ))"
       ;;
   esac
+
   echo "$input_id"
 }
 
