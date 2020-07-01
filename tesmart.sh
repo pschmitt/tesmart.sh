@@ -366,6 +366,7 @@ then
         echo "❌ Missing arg. Allowed values: on|off" >&2
         exit 2
       fi
+
       set_buzzer "$2"
       ;;
     led|led-timeout|lights|light|l)
@@ -374,6 +375,7 @@ then
         echo "❌ Missing arg. Allowed values: 10|30|never" >&2
         exit 2
       fi
+
       set_led_timeout "$2"
       ;;
     input-detection|detection|d)
@@ -382,6 +384,7 @@ then
         echo "❌ Missing arg. Allowed values: on|off" >&2
         exit 2
       fi
+
       set_input_detection "$2"
       ;;
     switch-input|switch|sw|s)
