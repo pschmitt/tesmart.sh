@@ -418,10 +418,14 @@ then
       echo "📺 Current input: $input"
       ;;
     get-network-info|network-info|nw-info|nw|n)
-      echo "IP:      $(get_ip)"
-      echo "Port:    $(get_port)"
-      echo "Netmask: $(get_netmask)"
-      echo "Gateway: $(get_gateway)"
+      ip="$(get_ip)"
+      port="$(get_port)"
+      netmask="$(get_netmask)"
+      gateway="$(get_gateway)"
+      echo "IP:      $ip"
+      echo "Port:    $port"
+      echo "Netmask: $netmask"
+      echo "Gateway: $gateway"
       ;;
     get-ip|ip|i)
       get_ip
@@ -441,7 +445,7 @@ then
     set-port|sp)
       set_port "$2"
       ;;
-    set-netmask|snetmask)
+    set-netmask|snetmask|snm)
       set_netmask "$2"
       ;;
     set-gateway|sgateway|sgw)
