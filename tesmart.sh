@@ -422,6 +422,7 @@ then
       port="$(get_port)"
       netmask="$(get_netmask)"
       gateway="$(get_gateway)"
+
       echo "IP:      $ip"
       echo "Port:    $port"
       echo "Netmask: $netmask"
