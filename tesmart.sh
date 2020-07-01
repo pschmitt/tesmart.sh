@@ -77,7 +77,7 @@ send_cmd_retry() {
           continue
         fi
 
-        if [[ -n "$expected" ]] && [[ ! "$printable" =~ $expected ]]
+        if [[ -n "$expected" ]] && ! grep -q "$expected" <<< "$printable"
         then
           continue
         fi
@@ -252,7 +252,16 @@ set_ip() {
     echo "❌ $ip in not a valid IP address." >&2
     return 2
   fi
-  send_cmd "IP: $port;"
+
+  send_cmd_retry -e OK "IP: $ip;"
+
+  if [[ "$(get_ip)" == "$ip" ]]
+  then
+    echo "✅ Set ip to $ip"
+  else
+    echo "❌ Failed to set ip to $ip" >&2
+    return 3
+  fi
 }
 
 set_port() {
@@ -265,7 +274,16 @@ set_port() {
     echo "❌ $port in not a valid port number." >&2
     return 2
   fi
-  send_cmd "PT: $port;"
+
+  send_cmd_retry -e OK "PT: $port;"
+
+  if [[ "$(get_port)" == "$port" ]]
+  then
+    echo "✅ Port updated to $port"
+  else
+    echo "❌ Failed to set port to $port" >&2
+    return 3
+  fi
 }
 
 set_netmask() {
@@ -276,7 +294,16 @@ set_netmask() {
     echo "❌ $netmask in not a valid netmask." >&2
     return 2
   fi
-  send_cmd "MA: $netmask;"
+
+  send_cmd_retry -e OK "MA: $netmask;"
+
+  if [[ "$(get_netmask)" == "$netmask" ]]
+  then
+    echo "✅ Netmask updated to $netmask"
+  else
+    echo "❌ Failed to set netmask to $netmask" >&2
+    return 3
+  fi
 }
 
 set_gateway() {
@@ -287,7 +314,16 @@ set_gateway() {
     echo "❌ $gateway in not a valid gateway." >&2
     return 2
   fi
-  send_cmd "GW: $gateway;"
+
+  send_cmd_retry -e OK "GW: $gateway;"
+
+  if [[ "$(get_gateway)" == "$gateway" ]]
+  then
+    echo "✅ Gateway updated to $gateway"
+  else
+    echo "❌ Failed to set gateway to $gateway" >&2
+    return 3
+  fi
 }
 
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]
@@ -368,7 +404,7 @@ then
         exit 4
       fi
       ;;
-    get|get-input|g)
+    get|get-input|g|state)
       # shellcheck disable=2119
       input="$(get_current_input)"
       if [[ -z "$input" ]]
