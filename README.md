@@ -57,6 +57,16 @@ DEBUG=1 ./tesmart.sh get-input
 ./tesmart.sh -d get-input
 ```
 
+## Warning
+
+If you change your network settings via `set-[ip|port|netmask|gateway]`
+you need to reboot your switch. This can be achieved by toggling the 
+on|off button.
+
+If you screw these up, you'll need to correct the settings by 
+either connecting via the RS232 port or fiddling with your computer's 
+IP address settings.
+
 ## Upstream Documentation
 
 - https://buytesmart.com/pages/support-manuals
