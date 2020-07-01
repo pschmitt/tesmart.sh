@@ -13,16 +13,79 @@ usage() {
   echo "  m, mute            Mute buzzer"
   echo "  u, unmute          Unmute buzzer"
   echo "  l, led-timeout     Set LED timeout"
+  echo "  n, nw-info         Get the current network config"
   echo "  e, exec            Send arbitrary HEX command to the host"
 }
 
 send_cmd() {
   if [[ -n "$DEBUG" ]]
   then
-    echo "Sending $* to $TESMART_HOST:$TESMART_PORT" >&2
+    echo "Sending \"$*\" to $TESMART_HOST:$TESMART_PORT" >&2
   fi
 
   echo -ne "$@" | nc -n "$TESMART_HOST" "$TESMART_PORT"
+}
+
+send_cmd_retry() {
+  local retries=10
+  local try=0
+  local raw
+  local res
+  local printable
+
+  while true
+  do
+    case "$1" in
+      -r|--retries)
+        retries="$2"
+        shift 2
+        ;;
+      -R|--raw)
+        raw=1
+        shift
+        ;;
+      -e|--expected)
+        expected="$2"
+        shift 2
+        ;;
+      *)
+        break
+        ;;
+    esac
+  done
+
+  while [[ "$try" -lt "$retries" ]]
+  do
+    try=$(( try + 1 ))
+    res="$(send_cmd "$@")"
+
+    if [[ -n "$res" ]]
+    then
+      if [[ -z "$raw" ]]
+      then
+        printable="$(tr -dc '[:print:]' <<< "$res")"
+        if [[ -z "$printable" ]]
+        then
+          continue
+        fi
+        if [[ ! "$printable" =~ $expected ]]
+        then
+          continue
+        fi
+      fi
+
+      if [[ -n "$DEBUG" ]]
+      then
+        echo "Got an answer after $try tries: \"$res\"" >&2
+        echo "Printable output: \"$(tr -dc '[:print:]' <<< "$res" | cat -vE)\"" >&2
+      fi
+      echo "$res"
+      return
+    fi
+    sleep 0.2
+  done
+
+  return 1
 }
 
 set_buzzer() {
@@ -132,12 +195,14 @@ get_current_input() {
 
 # shellcheck disable=2120
 get_current_input_retry() {
-  local retries="${1:-3}"
+  local retries="${1:-10}"
   local try=0
   local res
 
   while [[ "$try" -lt "$retries" ]]
   do
+    try=$(( try + 1 ))
+
     res="$(get_current_input)"
     if [[ -n "$res" ]]
     then
@@ -147,6 +212,39 @@ get_current_input_retry() {
   done
 
   return 1
+}
+
+sanitize_ip() {
+  sed 's/\.0\{1,2\}/\./g' | \
+    sed 's/^0\{1,2\}//'
+}
+
+get_network_info() {
+  local query="$1"
+  local res
+
+  res="$(send_cmd_retry -e "${query}:" "${query}?;")"
+  sed -nr "s/${query}:(.+);/\1/p" <<< "$res"
+}
+
+get_ip() {
+  get_network_info "IP" | \
+    sanitize_ip
+}
+
+get_port() {
+  get_network_info "PT" | \
+    sed 's/^0\{1,2\}//'
+}
+
+get_gateway() {
+  get_network_info "GW" | \
+    sanitize_ip
+}
+
+get_netmask() {
+  get_network_info "MA" | \
+    sanitize_ip
 }
 
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]
@@ -236,6 +334,24 @@ then
         exit 4
       fi
       echo "📺 Current input: $input"
+      ;;
+    get-network-info|network-info|nw-info|nw|n)
+      echo "IP:      $(get_ip)"
+      echo "Port:    $(get_port)"
+      echo "Netmask: $(get_netmask)"
+      echo "Gateway: $(get_gateway)"
+      ;;
+    get-ip|ip|i)
+      get_ip
+      ;;
+    get-port|port|p)
+      get_port
+      ;;
+    get-netmask|netmask|nm|ma|mask)
+      get_netmask
+      ;;
+    get-gateway|gw)
+      get_gateway
       ;;
     command|cmd|exec|eval|e|c)
       send_cmd "$@"
