@@ -127,7 +127,10 @@ unmute_buzzer() {
 }
 
 switch_input() {
-  send_cmd "\xaa\xbb\x03\x01\x0${1}\xee"
+  local hex
+  hex="$(printf "%02x" "$1")"
+
+  send_cmd "\xaa\xbb\x03\x01\x${hex}\xee"
 }
 
 set_input_detection() {
