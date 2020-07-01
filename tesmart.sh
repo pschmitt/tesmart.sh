@@ -385,22 +385,23 @@ then
       set_input_detection "$2"
       ;;
     switch-input|switch|sw|s)
-      if [[ -z "$2" ]]
+      input_id="$2"
+
+      if [[ -z "$input_id" ]] || [[ ! "$input_id" =~ ^[0-9]+$ ]]
       then
-        echo "❌ Missing input ID. Allowed values: 1-8" >&2
+        echo "❌ Missing or invalid input ID. Allowed values: 1-16" >&2
         exit 2
       fi
 
-      switch_input "$2"
+      switch_input "$input_id" >/dev/null
 
-      sleep 0.25
-      input="$(get_current_input)"
+      current_input="$(get_current_input)"
 
-      if [[ "$2" == "$input" ]]
+      if [[ "$input_id" == "$current_input" ]]
       then
-        echo "✔️ Switched to input $input"
+        echo "✔️ Switched to input $input_id"
       else
-        echo "❌ Failed switching to $2. Current input: $input" >&2
+        echo "❌ Failed switching to $input_id. Current input: $current_input" >&2
         exit 4
       fi
       ;;
