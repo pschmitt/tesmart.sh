@@ -59,6 +59,14 @@ send_cmd_retry() {
     try=$(( try + 1 ))
     res="$(send_cmd "$@" | tr -d '\0')"
 
+    if [[ -n "$DEBUG" ]]
+    then
+      {
+        echo "Raw output: $(cat -vE <<< "$res")"
+        echo "Printable output: \"$(tr -dc '[:print:]' <<< "$res" | cat -vE)\""
+      } >&2
+    fi
+
     if [[ -n "$res" ]]
     then
       if [[ -z "$raw" ]]
@@ -68,7 +76,13 @@ send_cmd_retry() {
         then
           continue
         fi
-        if [[ ! "$printable" =~ $expected ]]
+
+        if [[ -n "$expected" ]] && [[ ! "$printable" =~ $expected ]]
+        then
+          continue
+        fi
+      else
+        if [[ -n "$expected" ]] && ! hexdump -C <<< "$res" | grep -q "$expected"
         then
           continue
         fi
@@ -77,9 +91,7 @@ send_cmd_retry() {
       if [[ -n "$DEBUG" ]]
       then
         {
-          echo "Got an answer after $try tries: \"$res\""
-          echo "Raw output: $(cat -vE <<< "$res")"
-          echo "Printable output: \"$(tr -dc '[:print:]' <<< "$res" | cat -vE)\""
+          echo "Got a valid answer after $try try(-ies): \"$res\""
         } >&2
       fi
       echo "$res"
@@ -161,7 +173,7 @@ get_current_input() {
   local input_id
   local res
 
-  res="$(send_cmd_retry -R "\xaa\xbb\x03\x10\x00\xee")"
+  res="$(send_cmd_retry -R -e "aa bb 03 11" "\xaa\xbb\x03\x10\x00\xee")"
   hex="$(echo -en "$res" | hexdump -C | awk '/^00000000/ {print $(NF - 2)}')"
   # The next line does not get parsed correctly
   # dec="$(( 16#${hex} ))"
@@ -170,9 +182,10 @@ get_current_input() {
   if [[ -n "$DEBUG" ]]
   then
     { # DEBUG
-      echo "$ hexdump -C"
-      echo -en "$res" | hexdump -C
-      echo "-> HEX=${hex} - DEC=${dec}"
+      echo -n "$ hexdump -C -> "
+      echo -en "$res" | hexdump -C | sed -nr 's/00000000\s+(.+)\s+\|.+\|/\1/p'
+      echo "             -> HEX=${hex}"
+      echo "             -> DEC=${dec}"
     } >&2
   fi
 
@@ -225,6 +238,56 @@ get_gateway() {
 get_netmask() {
   get_network_info "MA" | \
     sanitize_ip
+}
+
+valid_ip() {
+  [[ "$1" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]
+}
+
+set_ip() {
+  local ip="$1"
+
+  if ! valid_ip "$ip"
+  then
+    echo "❌ $ip in not a valid IP address." >&2
+    return 2
+  fi
+  send_cmd "IP: $port;"
+}
+
+set_port() {
+  local port="$1"
+
+  if ! [[ "$port" =~ ^[0-9]+$ ]] || \
+       [[ "$port" -lt 0 ]] || \
+       [[ "$port" -gt 65535 ]]
+  then
+    echo "❌ $port in not a valid port number." >&2
+    return 2
+  fi
+  send_cmd "PT: $port;"
+}
+
+set_netmask() {
+  local netmask="$1"
+
+  if ! valid_ip "$netmask"
+  then
+    echo "❌ $netmask in not a valid netmask." >&2
+    return 2
+  fi
+  send_cmd "MA: $netmask;"
+}
+
+set_gateway() {
+  local gateway="$1"
+
+  if ! valid_ip "$gateway"
+  then
+    echo "❌ $gateway in not a valid gateway." >&2
+    return 2
+  fi
+  send_cmd "GW: $gateway;"
 }
 
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]
@@ -332,6 +395,18 @@ then
       ;;
     get-gateway|gw)
       get_gateway
+      ;;
+    set-ip|sip|si)
+      set_ip "$2"
+      ;;
+    set-port|sp)
+      set_port "$2"
+      ;;
+    set-netmask|snetmask)
+      set_netmask "$2"
+      ;;
+    set-gateway|sgateway|sgw)
+      set_gateway "$2"
       ;;
     command|cmd|exec|eval|e|c)
       send_cmd "$@"

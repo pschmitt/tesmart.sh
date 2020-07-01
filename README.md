@@ -43,6 +43,12 @@ TESMART_HOST=10.78.81.10 TESMART_PORT=5001 ./tesmart.sh get-input
 # Network info
 ./tesmart.sh network-info
 
+# Set network settings
+./tesmart.sh set-ip 10.79.82.11
+./tesmart.sh set-port 5011
+./tesmart.sh set-netmask 255.255.252.0
+./tesmart.sh set-gateway 10.79.82.1
+
 # DEBUG
 DEBUG=1 ./tesmart.sh get-input
 # Alternative
