@@ -17,14 +17,12 @@ usage() {
 }
 
 send_cmd() {
-  local -a extra_args
-
   if [[ -n "$DEBUG" ]]
   then
-    extra_args+=(-vv)
+    echo "Sending $* to $TESMART_HOST:$TESMART_PORT" >&2
   fi
 
-  echo -ne "$@" | nc "${extra_args[@]}" -n "$TESMART_HOST" "$TESMART_PORT"
+  echo -ne "$@" | nc -n "$TESMART_HOST" "$TESMART_PORT"
 }
 
 set_buzzer() {
@@ -51,7 +49,6 @@ unmute_buzzer() {
 }
 
 switch_input() {
-  # 0xAA 0xBB 0x03 0x01 0x{01-10} 0xEE
   send_cmd "\xaa\xbb\x03\x01\x0${1}\xee"
 }
 
@@ -133,6 +130,25 @@ get_current_input() {
   echo "$input_id"
 }
 
+# shellcheck disable=2120
+get_current_input_retry() {
+  local retries="${1:-3}"
+  local try=0
+  local res
+
+  while [[ "$try" -lt "$retries" ]]
+  do
+    res="$(get_current_input)"
+    if [[ -n "$res" ]]
+    then
+      echo "$res"
+      return
+    fi
+  done
+
+  return 1
+}
+
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]
 then
   while true
@@ -168,23 +184,40 @@ then
       unmute_buzzer
       ;;
     sound|beep|b)
+      if [[ -z "$2" ]]
+      then
+        echo "❌ Missing arg. Allowed values: on|off" >&2
+        exit 2
+      fi
       set_buzzer "$2"
       ;;
     led|led-timeout|lights|light|l)
+      if [[ -z "$2" ]]
+      then
+        echo "❌ Missing arg. Allowed values: 10|30|never" >&2
+        exit 2
+      fi
       set_led_timeout "$2"
       ;;
     input-detection|detection|d)
+      if [[ -z "$2" ]]
+      then
+        echo "❌ Missing arg. Allowed values: on|off" >&2
+        exit 2
+      fi
       set_input_detection "$2"
       ;;
     switch-input|switch|sw|s)
+      if [[ -z "$2" ]]
+      then
+        echo "❌ Missing input ID. Allowed values: 1-8" >&2
+        exit 2
+      fi
+
       switch_input "$2"
 
-      input="$(get_current_input 2>/dev/null)"
-      while [[ -z "$input" ]]
-      do
-        input="$(get_current_input 2>/dev/null)"
-        sleep 0.25
-      done
+      sleep 0.25
+      input="$(get_current_input_retry)"
 
       if [[ "$2" == "$input" ]]
       then
@@ -195,7 +228,14 @@ then
       fi
       ;;
     get|get-input|g)
-      echo "📺 Current input: $(get_current_input)"
+      # shellcheck disable=2119
+      input="$(get_current_input_retry)"
+      if [[ -z "$input" ]]
+      then
+        echo "❌ Failed to determine current input." >&2
+        exit 4
+      fi
+      echo "📺 Current input: $input"
       ;;
     command|cmd|exec|eval|e|c)
       send_cmd "$@"
