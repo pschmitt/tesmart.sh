@@ -57,7 +57,7 @@ send_cmd_retry() {
   while [[ "$try" -lt "$retries" ]]
   do
     try=$(( try + 1 ))
-    res="$(send_cmd "$@")"
+    res="$(send_cmd "$@" | tr -d '\0')"
 
     if [[ -n "$res" ]]
     then
@@ -76,8 +76,11 @@ send_cmd_retry() {
 
       if [[ -n "$DEBUG" ]]
       then
-        echo "Got an answer after $try tries: \"$res\"" >&2
-        echo "Printable output: \"$(tr -dc '[:print:]' <<< "$res" | cat -vE)\"" >&2
+        {
+          echo "Got an answer after $try tries: \"$res\""
+          echo "Raw output: $(cat -vE <<< "$res")"
+          echo "Printable output: \"$(tr -dc '[:print:]' <<< "$res" | cat -vE)\""
+        } >&2
       fi
       echo "$res"
       return
@@ -158,7 +161,7 @@ get_current_input() {
   local input_id
   local res
 
-  res="$(send_cmd "\xaa\xbb\x03\x10\x00\xee" 2>/dev/null | tr -d '\0')"
+  res="$(send_cmd_retry -R "\xaa\xbb\x03\x10\x00\xee")"
   hex="$(echo -en "$res" | hexdump -C | awk '/^00000000/ {print $(NF - 2)}')"
   # The next line does not get parsed correctly
   # dec="$(( 16#${hex} ))"
@@ -169,9 +172,7 @@ get_current_input() {
     { # DEBUG
       echo "$ hexdump -C"
       echo -en "$res" | hexdump -C
-      echo
-      echo "HEX=$hex"
-      echo "DEC=$dec"
+      echo "-> HEX=${hex} - DEC=${dec}"
     } >&2
   fi
 
@@ -191,27 +192,6 @@ get_current_input() {
   esac
 
   echo "$input_id"
-}
-
-# shellcheck disable=2120
-get_current_input_retry() {
-  local retries="${1:-10}"
-  local try=0
-  local res
-
-  while [[ "$try" -lt "$retries" ]]
-  do
-    try=$(( try + 1 ))
-
-    res="$(get_current_input)"
-    if [[ -n "$res" ]]
-    then
-      echo "$res"
-      return
-    fi
-  done
-
-  return 1
 }
 
 sanitize_ip() {
@@ -315,7 +295,7 @@ then
       switch_input "$2"
 
       sleep 0.25
-      input="$(get_current_input_retry)"
+      input="$(get_current_input)"
 
       if [[ "$2" == "$input" ]]
       then
@@ -327,7 +307,7 @@ then
       ;;
     get|get-input|g)
       # shellcheck disable=2119
-      input="$(get_current_input_retry)"
+      input="$(get_current_input)"
       if [[ -z "$input" ]]
       then
         echo "❌ Failed to determine current input." >&2
