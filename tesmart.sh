@@ -408,11 +408,13 @@ then
     get|get-input|g|state)
       # shellcheck disable=2119
       input="$(get_current_input)"
+
       if [[ -z "$input" ]]
       then
         echo "❌ Failed to determine current input." >&2
         exit 4
       fi
+
       echo "📺 Current input: $input"
       ;;
     get-network-info|network-info|nw-info|nw|n)
