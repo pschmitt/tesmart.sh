@@ -63,7 +63,7 @@ If you want to set up aliases for the input IDs you can create a config file.
 
 Its location can be set with the `-c CONFIG_FILE` flag.
 
-By default `./tesmart.sh` will use `,/config.sh`.
+By default `./tesmart.sh` will use `./config.sh`.
 
 This will enable the following workflow:
 
