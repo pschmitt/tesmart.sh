@@ -1,5 +1,7 @@
 # tesmart.sh
 
+This shell script can control network-enabled KVM switches by TESmart.
+
 ## Disclaimer
 
 This has only been tested with the [8-PORT HDMI 1.4 4K 30HZ](https://buytesmart.com/products/tesmart-8-port-hdmi-kvm-switch-autoscan-rackmount-ethernet-usb-hub-4k-30hz) device.
