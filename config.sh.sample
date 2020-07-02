@@ -1,0 +1,6 @@
+ALIAS_1=(main linux)
+ALIAS_2=(nas)
+ALIAS_3=(raspberry-pi pi)
+ALIAS_4=(windows)
+ALIAS_5=(ps5 console1 c1)
+ALIAS_6=(nintendo switch c2)

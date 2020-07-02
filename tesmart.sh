@@ -126,6 +126,19 @@ unmute_buzzer() {
   set_buzzer on
 }
 
+get_input_aliases() {
+  local CONFIG=./config.json
+
+  if ! [[ -r "$CONFIG" ]]
+  then
+    return
+  fi
+
+  local id="$1"
+
+  jq -r '.["'"$id"'"]' "$CONFIG"
+}
+
 switch_input() {
   local hex
   hex="$(printf "%02x" "$1")"
@@ -392,6 +405,39 @@ then
       ;;
     switch-input|switch|sw|s)
       input_id="$2"
+
+      ALIAS_CONFIG=./config.sh
+
+      if [[ -r "$ALIAS_CONFIG" ]]
+      then
+        # shellcheck disable=1090
+        source "$ALIAS_CONFIG"
+      fi
+
+      for alias_id in {1..16}
+      do
+        # mapfile -t alias_config < <(eval echo \${ALIAS_${alias_id}[@]})
+        # shellcheck disable=2207
+        alias_config=($(eval echo \${ALIAS_${alias_id}[@]}))
+
+        if [[ -n "$DEBUG" ]]
+        then
+          echo "ALIAS_CONFIG_$alias_id = ${alias_config[*]}" >&2
+        fi
+
+        for i in "${alias_config[@]}"
+        do
+          if [[ -n "$DEBUG" ]]
+          then
+            echo "$i" vs "$input_id" >&2
+          fi
+          if [[ "$i" == "$input_id" ]]
+          then
+            input_id="$alias_id"
+            break 2
+          fi
+        done
+      done
 
       if [[ -z "$input_id" ]] || [[ ! "$input_id" =~ ^[0-9]+$ ]]
       then
