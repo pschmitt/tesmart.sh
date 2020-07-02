@@ -40,9 +40,9 @@ This has only been tested with the [8-PORT HDMI 1.4 4K 30HZ](https://buytesmart.
 ./tesmart.sh input-detection off
 
 # Custom HOST/PORT
-TESMART_HOST=10.78.81.10 TESMART_PORT=5001 ./tesmart.sh get-input
-# Alternative
 ./tesmart.sh -H 10.78.81.10 -p 5001 get-input
+# Alternative
+TESMART_HOST=10.78.81.10 TESMART_PORT=5001 ./tesmart.sh get-input
 
 # Network info
 ./tesmart.sh network-info
@@ -54,9 +54,9 @@ TESMART_HOST=10.78.81.10 TESMART_PORT=5001 ./tesmart.sh get-input
 ./tesmart.sh set-gateway 10.79.82.1
 
 # DEBUG
-DEBUG=1 ./tesmart.sh get-input
-# Alternative
 ./tesmart.sh -d get-input
+# Alternative
+DEBUG=1 ./tesmart.sh get-input
 ```
 
 ## Configuration
