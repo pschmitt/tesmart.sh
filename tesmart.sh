@@ -4,6 +4,7 @@
 
 TESMART_HOST=${TESMART_HOST:-192.168.1.10}
 TESMART_PORT=${TESMART_PORT:-5000}
+ALIAS_CONFIG=${ALIAS_CONFIG:-./config.sh}
 
 usage() {
   echo "Usage: $(basename "$0") ACTION [ARGS]"
@@ -355,6 +356,10 @@ then
         TESMART_PORT="$2"
         shift 2
         ;;
+      --config|-c)
+        ALIAS_CONFIG="$2"
+        shift 2
+        ;;
       --debug|-d|-D)
         DEBUG=1
         shift
@@ -406,18 +411,24 @@ then
     switch-input|switch|sw|s)
       input_id="$2"
 
-      ALIAS_CONFIG=./config.sh
-
+      ALIAS_CONFIG="$(realpath "$ALIAS_CONFIG")"
       if [[ -r "$ALIAS_CONFIG" ]]
       then
+        if [[ -n "$DEBUG" ]]
+        then
+          echo "Using alias config at $ALIAS_CONFIG" >&2
+        fi
         # shellcheck disable=1090
         source "$ALIAS_CONFIG"
+      elif [[ -n "$DEBUG" ]]
+      then
+        echo "Alias config $ALIAS_CONFIG: No such file or directory" >&2
       fi
 
       for alias_id in {1..16}
       do
         # mapfile -t alias_config < <(eval echo \${ALIAS_${alias_id}[@]})
-        # shellcheck disable=2207
+        # shellcheck disable=2207,1083
         alias_config=($(eval echo \${ALIAS_${alias_id}[@]}))
 
         if [[ -n "$DEBUG" ]]

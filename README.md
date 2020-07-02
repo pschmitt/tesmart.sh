@@ -57,6 +57,26 @@ DEBUG=1 ./tesmart.sh get-input
 ./tesmart.sh -d get-input
 ```
 
+## Configuration
+
+If you want to set up aliases for the input IDs you can create a config file.
+
+Its location can be set with the `-c CONFIG_FILE` flag.
+
+By default `./tesmart.sh` will use `,/config.sh`.
+
+This will enable the following workflow:
+
+```bash
+# Instead of ./tesmart.sh switch 5 you could do:
+./tesmart.sh switch playstation_5
+
+# Instead of ./tesmart.sh switch 4 you could do:
+./tesmart.sh switch windows
+```
+
+Refer to the [example config file](./config.sh.sample) for the syntax.
+
 ## Warning
 
 If you change your network settings via `set-[ip|port|netmask|gateway]`
