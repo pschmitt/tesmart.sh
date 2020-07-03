@@ -15,6 +15,24 @@ This has only been tested with the [8-PORT HDMI 1.4 4K 30HZ](https://buytesmart.
 - netcat
 - sed
 
+## Installation
+
+### With zinit
+
+```zsh
+zinit wait lucid \
+    as"command" \
+    sbin"tesmart.sh -> tesmart" \
+    atinit'alias tesmart="tesmart -c /path/to/tesmart-config.sh -H MY_TESMART_IP_ADDR"' \
+  for pschmitt/tesmart.sh
+```
+
+After zinit does its thing, a new binary, `tesmart`, should be in your `PATH`.
+
+### Otherwise
+
+Just make sure the dependencies are installed and fetch `tesmart.sh`.
+
 ## Usage
 
 ```bash
