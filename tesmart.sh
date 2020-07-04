@@ -4,7 +4,7 @@
 
 TESMART_HOST=${TESMART_HOST:-192.168.1.10}
 TESMART_PORT=${TESMART_PORT:-5000}
-ALIAS_CONFIG=${ALIAS_CONFIG:-./config.sh}
+TESMART_CONFIG=${TESMART_CONFIG:-./config.sh}
 
 usage() {
   echo "Usage: $(basename "$0") ACTION [ARGS]"
@@ -128,16 +128,11 @@ unmute_buzzer() {
 }
 
 get_input_aliases() {
-  local CONFIG=./config.json
+  eval "echo \${ALIAS_${1}[*]}"
+}
 
-  if ! [[ -r "$CONFIG" ]]
-  then
-    return
-  fi
-
-  local id="$1"
-
-  jq -r '.["'"$id"'"]' "$CONFIG"
+get_main_input_alias(){
+  get_input_aliases "$1" | awk '{ print $1 }'
 }
 
 switch_input() {
@@ -187,8 +182,17 @@ set_led_timeout() {
 get_current_input() {
   local dec
   local hex
+  local input_alias
   local input_id
   local res
+  local noalias
+
+  case "$1" in
+    -i|--id)
+      noalias=1
+      shift
+      ;;
+  esac
 
   res="$(send_cmd_retry -R -e "aa bb 03 11" "\xaa\xbb\x03\x10\x00\xee")"
   hex="$(echo -en "$res" | hexdump -C | awk '/^00000000/ {print $(NF - 2)}')"
@@ -221,7 +225,11 @@ get_current_input() {
       ;;
   esac
 
-  echo "$input_id"
+  if [[ -z "$noalias" ]]
+  then
+    input_alias="$(get_main_input_alias "$input_id")"
+  fi
+  echo "${input_alias:-${input_id}}"
 }
 
 sanitize_ip() {
@@ -357,7 +365,7 @@ then
         shift 2
         ;;
       --config|-c)
-        ALIAS_CONFIG="$2"
+        TESMART_CONFIG="$2"
         shift 2
         ;;
       --debug|-d|-D)
@@ -369,6 +377,20 @@ then
         ;;
     esac
   done
+
+  TESMART_CONFIG="$(realpath "$TESMART_CONFIG")"
+  if [[ -r "$TESMART_CONFIG" ]]
+  then
+    if [[ -n "$DEBUG" ]]
+    then
+      echo "Using alias config at $TESMART_CONFIG" >&2
+    fi
+    # shellcheck disable=1090
+    source "$TESMART_CONFIG"
+  elif [[ -n "$DEBUG" ]]
+  then
+    echo "Alias config $TESMART_CONFIG: No such file or directory" >&2
+  fi
 
   case "$1" in
     help|--help|-h|h)
@@ -411,20 +433,6 @@ then
     switch-input|switch|sw|s)
       input_id="$2"
 
-      ALIAS_CONFIG="$(realpath "$ALIAS_CONFIG")"
-      if [[ -r "$ALIAS_CONFIG" ]]
-      then
-        if [[ -n "$DEBUG" ]]
-        then
-          echo "Using alias config at $ALIAS_CONFIG" >&2
-        fi
-        # shellcheck disable=1090
-        source "$ALIAS_CONFIG"
-      elif [[ -n "$DEBUG" ]]
-      then
-        echo "Alias config $ALIAS_CONFIG: No such file or directory" >&2
-      fi
-
       for alias_id in {1..16}
       do
         # mapfile -t alias_config < <(eval echo \${ALIAS_${alias_id}[@]})
@@ -433,7 +441,7 @@ then
 
         if [[ -n "$DEBUG" ]]
         then
-          echo "ALIAS_CONFIG_$alias_id = ${alias_config[*]}" >&2
+          echo "TESMART_CONFIG_$alias_id = ${alias_config[*]}" >&2
         fi
 
         for i in "${alias_config[@]}"
@@ -458,11 +466,18 @@ then
 
       switch_input "$input_id" >/dev/null
 
-      current_input="$(get_current_input)"
+      current_input="$(get_current_input --id)"
+      input_alias="$(get_main_input_alias "$current_input")"
 
       if [[ "$input_id" == "$current_input" ]]
       then
-        echo "✔️ Switched to input $input_id"
+        echo -n "✔️ Switched to input $input_id"
+        if [[ -n "$input_alias" ]]
+        then
+          echo " (${input_alias})"
+        else
+          echo
+        fi
       else
         echo "❌ Failed switching to $input_id. Current input: $current_input" >&2
         exit 4
@@ -470,15 +485,22 @@ then
       ;;
     get|get-input|g|state)
       # shellcheck disable=2119
-      input="$(get_current_input)"
+      input_id="$(get_current_input --id)"
+      input_alias=$(get_main_input_alias "$input_id")
 
-      if [[ -z "$input" ]]
+      if [[ -z "$input_id" ]]
       then
         echo "❌ Failed to determine current input." >&2
         exit 4
       fi
 
-      echo "📺 Current input: $input"
+      echo -n "📺 Current input: $input_id"
+      if [[ -n "$input_alias" ]]
+      then
+        echo " (${input_alias})"
+      else
+        echo
+      fi
       ;;
     get-network-info|network-info|nw-info|nw|n)
       ip="$(get_ip)"
