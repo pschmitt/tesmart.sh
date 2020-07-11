@@ -24,7 +24,7 @@ send_cmd() {
     echo "Sending \"$*\" to $TESMART_HOST:$TESMART_PORT" >&2
   fi
 
-  echo -ne "$@" | nc -n "$TESMART_HOST" "$TESMART_PORT"
+  echo -ne "$@" | nc -4 -n -N -w 2 "$TESMART_HOST" "$TESMART_PORT"
 }
 
 send_cmd_retry() {
