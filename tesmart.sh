@@ -18,13 +18,48 @@ usage() {
   echo "  e, exec            Send arbitrary HEX command to the host"
 }
 
+_nc() {
+  local timeout=1
+
+  if command -v ncat > /dev/null
+  then
+    if [[ -n "$DEBUG" ]]
+    then
+      {
+        echo "ncat detected"
+        echo "Invoking \$ nc -n -w $timeout $*"
+      } >&2
+    fi
+    nc -n -w "$timeout" "$@"
+  elif nc -h | grep -qi "OpenBSD netcat"
+  then
+    if [[ -n "$DEBUG" ]]
+    then
+      {
+        echo "OpenBSD netcat detected."
+        echo "Invoking \$ nc -n -N -w $timeout $*"
+      } >&2
+    fi
+    nc -n -N -w "$timeout" "$@"
+  elif nc -h 2>&1 | grep -qi "GNU netcat"
+  then
+    echo "Sorry, GNU netcat is not supported." >&2
+    echo "Please install openbsd-netcat or ncat" >&2
+    return 2
+  else
+    echo "No netcat tool found" >&2
+    echo "Please install openbsd-netcat or ncat" >&2
+    return 2
+  fi
+}
+
 send_cmd() {
   if [[ -n "$DEBUG" ]]
   then
     echo "Sending \"$*\" to $TESMART_HOST:$TESMART_PORT" >&2
   fi
 
-  echo -ne "$@" | nc -4 -n -N -w 2 "$TESMART_HOST" "$TESMART_PORT"
+  echo -ne "$@" | _nc "$TESMART_HOST" "$TESMART_PORT"
 }
 
 send_cmd_retry() {
