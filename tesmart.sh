@@ -43,12 +43,16 @@ _nc() {
     nc -4 -n -N -w "$timeout" "$@"
   elif nc -h 2>&1 | grep -qi "GNU netcat"
   then
-    echo "Sorry, GNU netcat is not supported." >&2
-    echo "Please install openbsd-netcat or ncat" >&2
+    {
+      echo "Sorry, GNU netcat is not supported."
+      echo "Please install openbsd-netcat or ncat"
+    } >&2
     return 2
   else
-    echo "No netcat tool found" >&2
-    echo "Please install openbsd-netcat or ncat" >&2
+    {
+      echo "No netcat tool found"
+      echo "Please install openbsd-netcat or ncat"
+    } >&2
     return 2
   fi
 }
