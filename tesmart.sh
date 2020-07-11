@@ -30,7 +30,7 @@ _nc() {
         echo "Invoking \$ nc -n -w $timeout $*"
       } >&2
     fi
-    nc -n -w "$timeout" "$@"
+    nc -4 -n -w "$timeout" "$@"
   elif nc -h | grep -qi "OpenBSD netcat"
   then
     if [[ -n "$DEBUG" ]]
@@ -40,7 +40,7 @@ _nc() {
         echo "Invoking \$ nc -n -N -w $timeout $*"
       } >&2
     fi
-    nc -n -N -w "$timeout" "$@"
+    nc -4 -n -N -w "$timeout" "$@"
   elif nc -h 2>&1 | grep -qi "GNU netcat"
   then
     echo "Sorry, GNU netcat is not supported." >&2
