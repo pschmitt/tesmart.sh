@@ -532,6 +532,9 @@ then
         exit 4
       fi
       ;;
+    get-input-id|input-id|iid|id|i)
+      get_current_input
+      ;;
     get|get-input|g|state)
       # shellcheck disable=2119
       input_id="$(get_current_input --id)"
