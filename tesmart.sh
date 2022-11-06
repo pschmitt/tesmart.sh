@@ -479,7 +479,7 @@ then
 
       set_input_detection "$2"
       ;;
-    switch-input|switch|sw|s)
+    switch-input|set-input|switch|set|sw|s)
       input_id="$2"
 
       for alias_id in {1..16}
