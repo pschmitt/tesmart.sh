@@ -31,16 +31,26 @@ _nc() {
       } >&2
     fi
     nc -4 -n -w "$timeout" "$@"
-  elif nc -h | grep -qi "OpenBSD netcat"
+  elif nc -h 2>&1 | grep -qi "OpenBSD netcat"
   then
     if [[ -n "$DEBUG" ]]
     then
       {
         echo "OpenBSD netcat detected."
-        echo "Invoking \$ nc -n -N -w $timeout $*"
+        echo "Invoking \$ nc -4 -n -N -w $timeout $*"
       } >&2
     fi
-    nc -4 -n -N -w "$timeout" "$@"
+    nc -4 -n -w "$timeout" "$@"
+  elif nc -h 2>&1 | grep -q BusyBox
+  then
+    if [[ -n "$DEBUG" ]]
+    then
+      {
+        echo "BusyBox netcat detected."
+        echo "Invoking \$ nc -n -w $timeout $*"
+      } >&2
+    fi
+    nc -n -w "$timeout" "$@"
   elif nc -h 2>&1 | grep -qi "GNU netcat"
   then
     {
@@ -586,3 +596,5 @@ then
       ;;
   esac
 fi
+
+# vim: set ft=bash et ts=2 sw=2 :
