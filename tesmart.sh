@@ -9,13 +9,18 @@ TESMART_CONFIG=${TESMART_CONFIG:-./config.sh}
 usage() {
   echo "Usage: $(basename "$0") ACTION [ARGS]"
   echo -e "\nAvailable ACTIONS:"
-  echo "  g, get-input       Get current input ID"
-  echo "  s, switch-input    Set the current input ID"
-  echo "  m, mute            Mute buzzer"
-  echo "  u, unmute          Unmute buzzer"
-  echo "  l, led-timeout     Set LED timeout"
-  echo "  n, nw-info         Get the current network config"
-  echo "  e, exec            Send arbitrary HEX command to the host"
+  echo "  g,   get-input               Get current input ID"
+  echo "  s,   switch-input <n>        Set the current input ID"
+  echo "  m,   mute                    Mute buzzer"
+  echo "  u,   unmute                  Unmute buzzer"
+  echo "  l,   led-timeout <10|30|off> Set LED timeout"
+  echo "  n,   nw-info                 Get the current network config"
+  echo "  e,   exec                    Send arbitrary HEX command to the host"
+  echo "  si,  set-ip <ip>             Set IP address"
+  echo "  sp,  set-port <port>         Set port"
+  echo "  snm, set-netmask <netmask>   Set network mask"
+  echo "  sgw, set-gateway <gateway>   Set network gateway"
+  echo
 }
 
 _nc() {
