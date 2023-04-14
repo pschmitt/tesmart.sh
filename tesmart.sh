@@ -23,6 +23,10 @@ usage() {
   echo
 }
 
+resolve_host() {
+  dig +short "$1" | head -n 1
+}
+
 _nc() {
   local timeout=1
 
@@ -78,7 +82,15 @@ send_cmd() {
     echo "Sending \"$*\" to $TESMART_HOST:$TESMART_PORT" >&2
   fi
 
-  echo -ne "$@" | _nc "$TESMART_HOST" "$TESMART_PORT"
+  local host_ip="$TESMART_HOST"
+
+  # Check if the host is an IP address, if not: resolve it
+  if ! valid_ip "$TESMART_HOST"
+  then
+    host_ip="$(resolve_host "$TESMART_HOST")"
+  fi
+
+  echo -ne "$@" | _nc "$host_ip" "$TESMART_PORT"
 }
 
 send_cmd_retry() {
