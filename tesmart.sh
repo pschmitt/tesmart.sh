@@ -444,7 +444,7 @@ then
     esac
   done
 
-  TESMART_CONFIG="$(realpath "$TESMART_CONFIG")"
+  TESMART_CONFIG="$(readlink -f -- "$TESMART_CONFIG")"
   if [[ -r "$TESMART_CONFIG" ]]
   then
     if [[ -n "$DEBUG" ]]
