@@ -129,8 +129,8 @@ send_cmd_retry() {
     if [[ -n "$DEBUG" ]]
     then
       {
-        echo "Raw output: $(cat -vE <<< "$res")"
-        echo "Printable output: \"$(tr -dc '[:print:]' <<< "$res" | cat -vE)\""
+        echo "Raw output: $(cat -v <<< "$res")"
+        echo "Printable output: \"$(tr -dc '[:print:]' <<< "$res" | cat -v)\""
       } >&2
     fi
 
